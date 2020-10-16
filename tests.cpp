@@ -287,7 +287,7 @@ TEST(function_test, arguments) {
     EXPECT_EQ(42, f(40, 2));
 }
 
-/*
+
 TEST(function_test, arguments_ref) {
     int x = 42;
     function<int &(int &)> f = [](int &a) -> int & { return a; };
@@ -296,13 +296,14 @@ TEST(function_test, arguments_ref) {
 }
 
 
+
 TEST(function_test, arguments_cref)
 {
     int const x = 42;
     function<int const& (int const&)> f = [](int const& a) -> int const& { return a; };
 
     EXPECT_EQ(&x, &f(x));
-}*/
+}
 
 struct non_copyable
 {

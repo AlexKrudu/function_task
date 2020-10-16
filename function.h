@@ -108,7 +108,7 @@ struct object_traits<T, true> {
     template<typename R, typename... Args>
     static methods<R, Args...> const *get_methods() {
         static constexpr methods<R, Args...> table{
-                [](storage<R, Args...> const *src, Args... args) {
+                [](storage<R, Args...> const *src, Args... args) -> R {
                     return (reinterpret_cast<const T &>(src->obj))(std::forward<Args>(args)...);
                 },
                 [](storage<R, Args...> *src) {
@@ -203,10 +203,6 @@ public:
 
     function &operator=(function &&rhs) noexcept = default;
 
-    /*      {
-      this->stg = rhs.stg; // todo и это тоже
-      return *this;
-  };*/
 
     ~function() = default;
 
@@ -215,7 +211,7 @@ public:
     };
 
     R operator()(Args... args) const {
-        return stg.methods_lst->invoke(&stg, std::forward<Args>(args)...); // govno kakoe to
+        return stg.methods_lst->invoke(&stg, std::forward<Args>(args)...);
     };
 
     template<typename T>
