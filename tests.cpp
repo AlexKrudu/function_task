@@ -78,7 +78,7 @@ TEST(function_test, empty_target)
     EXPECT_EQ(nullptr, f.target<small_func>());
     EXPECT_EQ(nullptr, std::as_const(f).target<small_func>());
 }
-
+/*
 TEST(function_test, small_func)
 {
     function<int ()> f = small_func(42);
@@ -396,7 +396,7 @@ TEST(function_test, target)
     EXPECT_NE(nullptr, f.target<bar>());
     EXPECT_EQ(nullptr, std::as_const(f).target<foo>());
     EXPECT_NE(nullptr, std::as_const(f).target<bar>());
-}
+} */
 
 int main(int argc, char *argv[])
 {
