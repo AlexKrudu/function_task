@@ -109,18 +109,18 @@ struct object_traits<T, true> {
     static methods<R, Args...> const *get_methods() {
         static constexpr methods<R, Args...> table{
                 [](storage<R, Args...> const *src, Args... args) -> R {
-                    return (reinterpret_cast<const T &>(src->obj))(std::forward<Args>(args)...);
+                    return (*get_target(src))(std::forward<Args>(args)...);
                 },
                 [](storage<R, Args...> *src) {
                     get_target(src)->~T();
                     src->methods_lst = get_empty_methods<R, Args...>();
                 },
                 [](storage<R, Args...> *dest, storage<R, Args...> const *src) {
-                    new(&dest->obj) T(reinterpret_cast<const T &>(src->obj));
+                    new(&dest->obj) T(*get_target(src));
                     dest->methods_lst = src->methods_lst;
                 },
                 [](storage<R, Args...> *dest, storage<R, Args...> *src) {
-                    new(&dest->obj) T(std::move(*reinterpret_cast<T const *>(src)));
+                    new(&dest->obj) T(std::move(*get_target(src)));
                     dest->methods_lst = src->methods_lst;
                     src->methods_lst = get_empty_methods<R, Args...>();
                 }
@@ -131,6 +131,11 @@ struct object_traits<T, true> {
     template<typename R, typename... Args>
     static T const *get_target(const storage<R, Args...> *stg) {
         return &reinterpret_cast<const T &>(stg->obj);
+    }
+
+    template<typename R, typename... Args>
+    static void T_ctor(storage<R, Args...> *src, T &&val) {
+        new(&src->obj) T(val);
     }
 };
 
@@ -152,7 +157,7 @@ struct object_traits<T, false> {
                 },
                 [](storage<R, Args...> *dest, storage<R, Args...> *src) {
                     reinterpret_cast<void *&>(dest->obj) = const_cast<T *>(get_target(
-                            src)); // todo maybe should use target func
+                            src));
                     dest->methods_lst = src->methods_lst;
                     src->methods_lst = get_empty_methods<R, Args...>();
                 }
@@ -163,6 +168,11 @@ struct object_traits<T, false> {
     template<typename R, typename... Args>
     static T const *get_target(const storage<R, Args...> *stg) {
         return static_cast<T const *>(reinterpret_cast<void *const &>(stg->obj));
+    }
+
+    template<typename R, typename... Args>
+    static void T_ctor(storage<R, Args...> *src, T &&val) {
+        reinterpret_cast<void *&>(src->obj) = new T(val);
     }
 };
 
@@ -188,16 +198,20 @@ public:
     template<typename T>
     function(T val) {
         stg.methods_lst = object_traits<T, is_small_storage<T>>::template get_methods<R, Args...>();
-        if (is_small_storage<T>) {
+
+        //object_traits<T, is_small_storage<T>>::template T_ctor(&stg, std::move(val)); // not working for some reason
+
+
+        if constexpr (is_small_storage<T>) {
             new(&stg.obj) T(std::move(val));
         } else {
-            reinterpret_cast<void *&>(stg.obj) = new T(std::move(val));
+            reinterpret_cast<void *&>(stg.obj) = new T(std::move(val)); // TODO remove if statement
         }
 
     };
 
     function &operator=(function const &rhs) {
-        this->stg = rhs.stg; // todo спросить почему я не могу это сделать по человечески
+        this->stg = rhs.stg;
         return *this;
     };
 
