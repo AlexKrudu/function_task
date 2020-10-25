@@ -79,7 +79,9 @@ struct storage {
 
     storage &operator=(storage const &other) {
         if (this != &other) {
-            storage(other).swap(*this);
+            storage temp(other);
+            methods_lst->deleter(this);
+            other.methods_lst->mover(this, &temp);
         }
         return *this;
     }
@@ -92,10 +94,6 @@ struct storage {
         return *this;
     }
 
-    void swap(storage &other) {
-        std::swap(obj, other.obj);
-        std::swap(methods_lst, other.methods_lst);
-    }
 
     typename std::aligned_storage<sizeof(void *), alignof(void *)>::type obj;
 
